@@ -4,9 +4,13 @@
   environment_name="trojan_install";
   tmp_trojan="/tmp/${environment_name}";
 
+#版本全局变量
+openssl_version='1.1.1';
+cmake_version='3.12.3';
+
   #所需的依赖 变量
-  openssl_name='openssl-1.1.1f';
-  cmake_name='cmake-3.12.3';
+  openssl_name='openssl-'$openssl_version'f';
+  cmake_name='cmake-'$cmake_version;
   boost_name='boost_1_68_0';
   trojan_name="trojan";
   openssl_tar="${openssl_name}.tar.gz";
@@ -31,7 +35,7 @@
   ubuntu_tojan_install(){
     sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/trojan-gfw/trojan-quickstart/master/trojan-quickstart.sh)"
     trojan_bin_location='/usr/local/bin/';trojan_service_location='/etc/systemd/system/';
-    if [[ `find $trojan_bin_location -name 'trojan'|grep -c -i "trojan"` -eq 0 ]] || [[ `find $trojan_bin_location -name 'trojan'|grep -c -i "trojan"` -eq 0 ]];then
+    if [[ $(find $trojan_bin_location -name 'trojan'|grep -c -i "trojan") -eq 0 ]] || [[ $(find $trojan_bin_location -name 'trojan'|grep -c -i "trojan") -eq 0 ]];then
         echo "=============================trojan 安装失败================================="
         exit 5;
       else
@@ -41,12 +45,23 @@
       fi
   }
 
+
+# 判断是否存在openssl 1.1.1
+
+
   centos_update(){
     yum -y update # 更新系统
 
     yum -y install jq #安装jq 解析json数据
 
-    yum -y remove openssl openssl-devel cmake # 把系统自带的openssl/cmake卸载掉
+    if [[ $(openssl version | awk '{print $2}' |grep -c -i $openssl_version ) -eq 0 ]]; then
+    yum -y remove openssl openssl-devel  # 把系统自带的openssl卸载掉
+    fi
+
+     if [[ $(cmake -version | awk '{print $3}' |grep -c -i $cmake_version ) -eq 0 ]]; then
+        yum -y remove cmake  # 把系统自带的cmake卸载掉
+    fi
+
 
     yum -y install epel-release # 安装EPEL源(用于安装certbot)
 
@@ -55,8 +70,10 @@
     yum -y install wget git libtool perl-core zlib-devel bzip2-devel python-devel # 安装编译openssl/cmake/boost所需的依赖
   }
 
+
+
   openssl_make(){
-    if [[ `openssl version |grep -c -i 'openssl'` -eq 0 ]];then
+    if [[ $(openssl version | awk '{print $2}' |grep -c -i $openssl_version ) -eq 0 ]]; then
       echo "=============================开始安装 openssl================================="
     tar -xzvf $tmp_trojan/$openssl_tar -C  $tmp_trojan/&& cd  $tmp_trojan/$openssl_name && `$tmp_trojan/$openssl_name/config --prefix=/usr/local/openssl --openssldir=/usr/local/openssl shared zlib`
     make
@@ -67,16 +84,16 @@
     if [ ! -f  /etc/ld.so.conf.d/$openssl_name.conf ];then
         touch /etc/ld.so.conf.d/$openssl_name.conf;
     fi
-    `echo '/usr/local/openssl/lib' > /etc/ld.so.conf.d/$openssl_name.conf` ;
+    echo '/usr/local/openssl/lib' > /etc/ld.so.conf.d/$openssl_name.conf ;
     ldconfig -v;
     ###########配置环境变量###############
     mkdir -p /etc/profile.d/;
     if [ ! -f  /etc/profile.d/$openssl_name.sh ];then
         touch /etc/profile.d/$openssl_name.sh;
     fi
-    `echo 'pathmunge /usr/local/openssl/bin' > /etc/profile.d/$openssl_name.sh`;
+    echo 'pathmunge /usr/local/openssl/bin' > /etc/profile.d/$openssl_name.sh;
     source /etc/profile;
-    if [[ `openssl version |grep -c -i 'openssl'` -eq 0 ]];then
+    if [[ $(openssl version | awk '{print $2}' |grep -c -i $openssl_version ) -eq 0 ]]; then
       echo "=============================openssl 安装失败================================="
       exit 1;
     else
@@ -89,7 +106,7 @@
   }
 
   cmake_make(){
-    if [[ `cmake --version |grep -c -i 'cmake'` -eq 0 ]];then
+    if [[ $(cmake --version |grep -c -i 'cmake') -eq 0 ]];then
       echo "=============================开始安装 cmake================================="
       tar -xzvf $tmp_trojan/$cmake_tar -C $tmp_trojan/;
       cd $tmp_trojan/$cmake_name ;
@@ -109,14 +126,14 @@
 
 
   boost_make(){
-    if [[ `find / -name libboost_random.so*| grep -c -i "boost"` -eq 0 ]];then
+    if [[ $(find / -name libboost_random.so*| grep -c -i "boost") -eq 0 ]];then
       echo "=============================开始安装 boost================================="
       tar -xzvf $tmp_trojan/$boost_tar -C $tmp_trojan/ ;
       cd $tmp_trojan/$boost_name;
-      `bash $tmp_trojan/$boost_name/bootstrap.sh --prefix=/usr/local/include/boost`;
+      bash $tmp_trojan/$boost_name/bootstrap.sh --prefix=/usr/local/include/boost;
       $tmp_trojan/$boost_name/b2
       $tmp_trojan/$boost_name/b2 install
-      if [[ `find / -name libboost_random.so*| grep -c -i "boost"` -eq 0 ]];then
+      if [[ $(find / -name libboost_random.so*| grep -c -i "boost") -eq 0 ]];then
         echo "=============================boost 安装失败================================="
         exit 3;
       else
@@ -128,6 +145,7 @@
   }
 
   trojan_make(){
+     if ! [[ -x "$(command -v trojan)" ]];then
       echo "=============================开始安装 trojan================================="
       trojan_bin_location='/usr/local/bin/';trojan_service_location='/etc/systemd/system/';
       rm -rf $tmp_trojan/$trojan_name/build;
@@ -137,13 +155,16 @@
       make
       cp $tmp_trojan/$trojan_name/build/trojan $trojan_bin_location;
       cp $tmp_trojan/$trojan_name/build/trojan.service $trojan_service_location;
-      if [[ `find $trojan_bin_location -name 'trojan'|grep -c -i "trojan"` -eq 0 ]] || [[ `find $trojan_bin_location -name 'trojan'|grep -c -i "trojan"` -eq 0 ]];then
+      if ! [[ -x "$(command -v trojan)" ]];then
           echo "=============================trojan 安装失败================================="
           exit 5;
         else
           sed -i '/^User/d;/^AmbientCapabilities/d' $trojan_service_location/trojan.service;
           echo "=============================trojan 安装成功================================="
         fi
+     else
+          echo "=============================trojan 已安装================================="
+      fi
   }
   trojan_json(){
     trojan_new_json="{
@@ -204,6 +225,8 @@
     #获取当前key value
     #config_orginal=`grep -Poz '"'$key'":[[:space:]]*\K[\[]?["]?[^"]*["]?[\]]?,' $dire/configDemo.json |cut -f1 -d','`;
     new_config_orginal=$config_orginal
+    # shellcheck disable=SC1087
+    # shellcheck disable=SC2027
     echo -n "$title[默认:"$(echo $config_orginal| cut -f2 -d'"')"]:"; read new_config_modify
       if [[ x$new_config_modify != x ]]; then
 	new_config_orginal=$new_config_modify;
