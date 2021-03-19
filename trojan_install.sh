@@ -73,7 +73,7 @@ cmake_version=3.12.3;
 
 
   openssl_make(){
-    if [[ $(openssl version | awk '{print $2}' |grep -c -i $openssl_version ) -eq 0 ]]; then
+    if [[ $(openssl version | grep -c -i $openssl_version ) -eq 0 ]]; then
       echo "=============================开始安装 openssl================================="
     tar -xzvf $tmp_trojan/$openssl_tar -C  $tmp_trojan/&& cd  $tmp_trojan/$openssl_name && `$tmp_trojan/$openssl_name/config --prefix=/usr/local/openssl --openssldir=/usr/local/openssl shared zlib`
     make
@@ -93,7 +93,7 @@ cmake_version=3.12.3;
     fi
     echo 'pathmunge /usr/local/openssl/bin' > /etc/profile.d/$openssl_name.sh;
     source /etc/profile;
-    if [[ $(openssl version | awk '{print $2}' |grep -c -i $openssl_version ) -eq 0 ]]; then
+    if [[ $(openssl version |grep -c -i $openssl_version ) -eq 0 ]]; then
       echo "=============================openssl 安装失败================================="
       exit 1;
     else
@@ -106,14 +106,14 @@ cmake_version=3.12.3;
   }
 
   cmake_make(){
-    if ! [[ -x $(command -v cmake )  ]];then
+    if ! [ -x "$(command -v cmake )" ];then
       echo "=============================开始安装 cmake================================="
       tar -xzvf $tmp_trojan/$cmake_tar -C $tmp_trojan/;
       cd $tmp_trojan/$cmake_name ;
       $tmp_trojan/$cmake_name/bootstrap;
       gmake
       gmake install
-      if ! [[ -x $(command -v cmake )  ]];then
+      if ! [ -x "$(command -v cmake )" ];then
         echo "=============================cmake 安装失败================================="
         exit 2;
       else
