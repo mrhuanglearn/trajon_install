@@ -113,7 +113,7 @@ cmake_version='3.12.3';
       $tmp_trojan/$cmake_name/bootstrap;
       gmake
       gmake install
-      if [[ $(cmake --version |grep -c -i 'cmake') -eq 0 ]];then
+      if ! [[ -x $(command -v cmake )  ]];then
         echo "=============================cmake 安装失败================================="
         exit 2;
       else
