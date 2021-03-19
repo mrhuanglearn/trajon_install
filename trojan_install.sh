@@ -306,6 +306,12 @@ ssl_domain() {
   certbot certonly --standalone -d $remote_addr_config
 }
 
+ssl_delete_domain() {
+  auto_config_make "请输入ssl域名" "www.example.com" #原始value
+  ssl_delete_config=$new_config_orginal
+  sudo certbot delete --cert-name $ssl_delete_config
+}
+
 trojan_config() {
   type_opt=$1
   trojan_config_path='/usr/local/etc/trojan'
@@ -474,21 +480,24 @@ switchConfig() {
     trojan_install
   elif [[ $i == 3 ]]; then
     ssl_domain #安装ssl证书
-    sudo systemctl enable trojan.service && sudo systemctl stop trojan.service &&sudo systemctl start trojan.service
+    sudo systemctl enable trojan.service && sudo systemctl stop trojan.service && sudo systemctl start trojan.service
   elif [[ $i == 4 ]]; then
-    serverSpeeder_kenel_install #锐速内核安装
+    ssl_delete_domain #移除不需要ssl域名
   elif [[ $i == 5 ]]; then
-    serverSpeeder_install
+    serverSpeeder_kenel_install #锐速内核安装
   elif [[ $i == 6 ]]; then
+    serverSpeeder_install
+  elif [[ $i == 7 ]]; then
     serverSpeeder_uninstall
   fi
 }
 cat <<F
  1. 修改配置
- 2. 安装
+ 2. 安装Trojan
  3. 安装ssl证书
- 4. 锐速内核安装
- 5. 锐速安装
- 6. 锐速卸载
+ 4. 移除不需要ssl域名
+ 5. 锐速内核安装
+ 6. 锐速安装
+ 7. 锐速卸载
 F
 switchConfig
