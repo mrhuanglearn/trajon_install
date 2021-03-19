@@ -5,8 +5,8 @@
   tmp_trojan="/tmp/${environment_name}";
 
 #版本全局变量
-openssl_version='1.1.1';
-cmake_version='3.12.3';
+openssl_version=1.1.1;
+cmake_version=3.12.3;
 
   #所需的依赖 变量
   openssl_name='openssl-'$openssl_version'f';
@@ -54,11 +54,11 @@ cmake_version='3.12.3';
 
     yum -y install jq #安装jq 解析json数据
 
-    if [[ $(openssl version | awk '{print $2}' |grep -c -i $openssl_version ) -eq 0 ]]; then
+    if [[ $(openssl version |grep -c -i $openssl_version ) -eq 0 ]]; then
     yum -y remove openssl openssl-devel  # 把系统自带的openssl卸载掉
     fi
 
-     if [[ $(cmake -version | awk '{print $3}' |grep -c -i $cmake_version ) -eq 0 ]]; then
+     if [[ $(cmake -version |grep -c -i $cmake_version ) -eq 0 ]]; then
         yum -y remove cmake  # 把系统自带的cmake卸载掉
     fi
 
