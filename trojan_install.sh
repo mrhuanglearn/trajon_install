@@ -453,6 +453,7 @@ serverSpeeder_install() {
 }
 
 serverSpeeder_uninstall() {
+  # shellcheck disable=SC2091
   $(chattr -i /serverspeeder/etc/apx* && /serverspeeder/bin/serverSpeeder.sh uninstall -f)
 }
 
@@ -473,6 +474,7 @@ switchConfig() {
     trojan_install
   elif [[ $i == 3 ]]; then
     ssl_domain #安装ssl证书
+    sudo systemctl enable trojan.service && sudo systemctl stop trojan.service &&sudo systemctl start trojan.service
   elif [[ $i == 4 ]]; then
     serverSpeeder_kenel_install #锐速内核安装
   elif [[ $i == 5 ]]; then
