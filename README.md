@@ -3,5 +3,5 @@
 
 ## linux运行一键命令
 ```shell    
-sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/mrhuanglearn/trajon_install/master/trojan_install.sh)"&&source /etc/profile
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/mrhuanglearn/trajon_install/master/trojan_install.sh)"&&source /etc/profile
 ```
